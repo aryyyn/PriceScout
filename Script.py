@@ -76,14 +76,66 @@ class DataExtract:
             return DarazProductDict
 
 
+
     @staticmethod
     def hamro_bazar_extract(productName) -> dict:
-        pass
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page()
 
-# Instantiate the DataExtract class and scrape product data
+            page.goto("https://hamrobazaar.com/")
+
+            page.wait_for_timeout(2000)
+
+            page.fill('input[name="searchValue"]', productName)
+            page.click('button.nav-searchbar-input-searchIcon')
+
+            page.wait_for_selector('.hb__body ')
+
+            html_content = page.inner_html('[data-test-id="virtuoso-item-list"]')
+            soup = BeautifulSoup(html_content, 'html.parser')
+            # print(html_content)
+
+            TitleDiv = soup.find_all(class_ = "product-title")
+            PriceDiv = soup.find_all(class_ = "regularPrice")
+            LinkDiv = soup.find_all(class_ = "nameAndDropdown")
+            ImageDiv = soup.find_all(class_ = "image-container")
+            
+            
+            page.wait_for_selector('.image-container')
+            HamroBazarProductDict = {}
+            try:
+                
+                for div1,div2,div3,div4 in zip(TitleDiv,PriceDiv,LinkDiv,ImageDiv):
+                    TitleText = div1.get_text(strip=True)
+                    PriceText = div2.get_text(strip=True)
+
+                    links = [a['href'] for a in div3.find_all('a', href=True)]
+                    
+                    
+                    img_tag = div4.find("img")
+                    if img_tag:
+                        image_url = img_tag.get('data-src')
+                        if not image_url:
+                            image_url = img_tag.get('src')
+
+                    # print(image_url)
+                    
+                    HamroBazarProductDict[TitleText] = {'price': PriceText, 'link': links, 'image': image_url}
+                    
+            except Exception as err:
+                print(err)
+
+            browser.close()
+
+            return HamroBazarProductDict
+        
+    
+
+# Instantiate the DataExtract class and scrape product data 
 DE = DataExtract()
 productName = "Headphone"
-productData = DE.daraz_extract(productName)
+productData = DE.hamro_bazar_extract(productName)
 
 # Testing the output by printing product details
 for title, data in productData.items():
@@ -96,3 +148,5 @@ for title, data in productData.items():
     print(f"Link: {link}")
     print(f"Image Link: {image}")
     print("-----")
+
+
