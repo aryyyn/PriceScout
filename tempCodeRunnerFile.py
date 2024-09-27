@@ -1,1 +1,1 @@
-print(image_url)
+print(ThuloProductDict)

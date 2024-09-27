@@ -21,7 +21,7 @@ class DataExtract:
 
         # Start Playwright and launch Chromium in headless mode
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             page = browser.new_page()
             
             # Open Daraz website
@@ -75,12 +75,60 @@ class DataExtract:
 
             return DarazProductDict
 
+    @staticmethod
+    def thulo_extract(productName) -> dict:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page()
 
+            page.goto("https://thulo.com.np/")
+            page.fill('input.form-control', productName)
+
+            page.click('button[type="submit"]')
+
+            page.wait_for_selector(".container")
+
+            html_content = page.inner_html(".rowmk")
+           
+            soup = BeautifulSoup(html_content, "html.parser")
+
+            PriceDiv = soup.find_all(class_ = 'offerPrice')
+            TitleDiv = soup.find_all(class_ = 'global-card-contents-title text-capitalize')
+            ImageDiv = soup.find_all(id = 'productImage')
+            
+
+
+            ThuloProductDict = {}
+            try:
+                if len(PriceDiv) == len(TitleDiv) == len(ImageDiv):    
+                    for div1,div2,div3 in zip(TitleDiv,PriceDiv, ImageDiv):
+                        
+                        
+                        links = [a['href'] for a in div1.find_all('a', href=True)]
+                        TitleText = div1.get_text(strip=True)
+                        PriceText = div2.get_text(strip=True)
+                        img = div3['src'] 
+
+                        ThuloProductDict[TitleText] = {'price': PriceText, 'link': links, 'image': img}
+                        
+                        
+                        
+            except Exception as err:
+                print(err)
+
+            
+            browser.close()
+
+            return ThuloProductDict
+
+
+            # print(TitleDiv,PriceDiv)
+            
 
     @staticmethod
     def hamro_bazar_extract(productName) -> dict:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
 
             page.goto("https://hamrobazaar.com/")
@@ -134,11 +182,12 @@ class DataExtract:
 
 # Instantiate the DataExtract class and scrape product data 
 DE = DataExtract()
-productName = "Headphone"
-productData = DE.hamro_bazar_extract(productName)
+productName = "headphone"
+# productDataHamroBazar = DE.hamro_bazar_extract(productName)
+ThulorProductDict = DE.thulo_extract(productName)
 
 # Testing the output by printing product details
-for title, data in productData.items():
+for title, data in ThulorProductDict.items():
     price = data['price']
     link = data['link']
     image = data['image']
