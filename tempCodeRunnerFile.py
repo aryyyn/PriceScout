@@ -1,1 +1,1 @@
-print(ThuloProductDict)
+OkDamProductDict[title] = {'price': price, 'link': links, 'image': image_url}

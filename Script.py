@@ -178,16 +178,63 @@ class DataExtract:
 
             return HamroBazarProductDict
         
+
+    @staticmethod
+    def okdam_extraction(productName) -> dict:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page()
+
+            page.goto("https://www.okdam.com/")
+
+            page.fill('[placeholder="Search Products & brands"]', productName)
+            page.press('[placeholder="Search Products & brands"]', "Enter")
+            page.wait_for_selector(".feature-box1")
+
+
+            html_content = page.inner_html(".feature-box1")
+            soup = BeautifulSoup(html_content, 'html.parser')
+
+            OkDamProductDict = {}
+
+            MainDiv = soup.find_all(class_ = "col-6 col-sm-6 col-md-6 col-lg-3 pro-wrap")
+            try:
+                for div in MainDiv:
+                    links = [a['href'] for a in div.find_all("a", href = True)]
+                    image_url = [img['data-src'] for img in div.find_all('img')]
+                    title = [img['alt'] for img in div.find_all('img')]
+
+                    title = ''.join(title)
+                    pricediv = div.find('span', class_="og-price")
+                    if pricediv:
+                        price = pricediv.get_text(strip=True)
+                    
+                    
+
+                    OkDamProductDict[title] = {'price': price, 'link': links, 'image': image_url}
+                   
+            
+            
+            except Exception as err:
+                print(err)
+
+            page.close()
+
+            return OkDamProductDict
+
+
+
+        
     
 
 # Instantiate the DataExtract class and scrape product data 
 DE = DataExtract()
-productName = "headphone"
+productName = "water"
 # productDataHamroBazar = DE.hamro_bazar_extract(productName)
-ThulorProductDict = DE.thulo_extract(productName)
+Test = DE.okdam_extraction(productName)
 
 # Testing the output by printing product details
-for title, data in ThulorProductDict.items():
+for title, data in Test.items():
     price = data['price']
     link = data['link']
     image = data['image']
