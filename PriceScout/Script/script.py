@@ -4,10 +4,11 @@ from bs4 import BeautifulSoup
 import re
 import asyncio
 
+
 class DataExtract:
 
     @staticmethod
-    async def daraz_extract(productName) -> dict: #changing to asynchronous function
+    async def daraz_extract(productName) -> dict:  # changing to asynchronous function
         """
         Scrapes Daraz for product details based on the provided product name.
 
@@ -27,21 +28,26 @@ class DataExtract:
             page = await browser.new_page()
 
             # Open Daraz website
-            await page.goto("https://www.daraz.com.np/")
+            await page.goto(
+                f"https://www.daraz.com.np/catalog/?q={productName}",
+                wait_until="domcontentloaded",
+            )  # added wait_until cause the site was taking a long time to load, domcontentloaded basically tells it to not wait for any exrernal files, and display results as soon as the HTML has been loaded.
 
             # Search for the product using the provided product name
-            await page.fill("input#q", productName)
-            await page.click("a.search-box__button--1oH7")  # Click the search button
+            # skipping this part because the homepage was taking a long time to load
+            # await page.fill("input#q", productName)
+            # await page.click("a.search-box__button--1oH7")  # Click the search button
 
             # Wait for product results to load
             await page.wait_for_selector(".FWSEp")
-
+            
             # Get the HTML content of the product container
             html_content = await page.inner_html("._17mcb")
             soup = BeautifulSoup(
                 html_content, "html.parser"
             )  # Initialize BeautifulSoup
 
+            
             # Initialize dictionary to store product data
             DarazProductDict = {}
 
@@ -99,7 +105,7 @@ class DataExtract:
             browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
 
-            await page.goto("https://thulo.com.np/")
+            await page.goto("https://thulo.com.np/", wait_until="domcontentloaded",)
             await page.fill("input.form-control", productName)
 
             await page.click('button[type="submit"]')
@@ -153,10 +159,10 @@ class DataExtract:
             dict: A dictionary containing product titles, prices, and links.
         """
         async with async_playwright() as p:
-            browser =await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
 
-            await page.goto("https://hamrobazaar.com/")
+            await page.goto("https://hamrobazaar.com/", wait_until="domcontentloaded",)
 
             # page.wait_for_timeout(2000) #debugging purposes
 
@@ -167,7 +173,6 @@ class DataExtract:
 
             html_content = await page.inner_html('[data-test-id="virtuoso-item-list"]')
             soup = BeautifulSoup(html_content, "html.parser")
-           
 
             TitleDiv = soup.find_all(class_="product-title")
             PriceDiv = soup.find_all(class_="regularPrice")
@@ -184,9 +189,13 @@ class DataExtract:
                     TitleText = div1.get_text(strip=True)
                     PriceText = div2.get_text(strip=True)
 
-                    links = [a["href"] for a in div3.find_all("a", href=True)] #finds a tag from div3 respose data, and then from there extracts the href tag
+                    links = [
+                        a["href"] for a in div3.find_all("a", href=True)
+                    ]  # finds a tag from div3 respose data, and then from there extracts the href tag
 
-                    img_tag = div4.find("img") #another way of extracting image from response data
+                    img_tag = div4.find(
+                        "img"
+                    )  # another way of extracting image from response data
                     if img_tag:
                         image_url = img_tag.get("data-src")
                         if not image_url:
@@ -222,7 +231,7 @@ class DataExtract:
             browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
 
-            await page.goto("https://www.okdam.com/")
+            await page.goto("https://www.okdam.com/", wait_until="domcontentloaded",)
 
             await page.fill('[placeholder="Search Products & brands"]', productName)
             await page.press('[placeholder="Search Products & brands"]', "Enter")
@@ -273,7 +282,7 @@ class DataExtract:
             browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
 
-            await page.goto("https://dealayo.com/")
+            await page.goto("https://dealayo.com/", wait_until="domcontentloaded",)
 
             await page.fill("input#search", productName)
             await page.press("input#search", "Enter")
@@ -308,20 +317,29 @@ class DataExtract:
             return DealAyoDataDict
 
 
-# # Instantiate the DataExtract class and scrape product data
-# DE = DataExtract()
-# productName = "headphone"
-# # productDataHamroBazar = DE.hamro_bazar_extract(productName)
-# Test = DE.dealayo_extraction(productName)
+# Instantiate the DataExtract class and scrape product data
+async def main():
+    DE = DataExtract()
+    productName = "headphone"
 
-# # Testing the output by printing product details
-# for title, data in Test.items():
-#     price = data["price"]
-#     link = data["link"]
-#     image = data["image"]
+#     # Gather the results from the async function
+    results = await asyncio.gather(DE.daraz_extract(productName))
 
-#     print(f"Title: {title}")
-#     print(f"Price: {price}")
-#     print(f"Link: {link}")
-#     print(f"Image Link: {image}")
-#     print("-----")
+#     # The results will be a list with one item (the dictionary returned by daraz_extract)
+    daraz_data = results[0]
+
+    # Now we can iterate over the dictionary items
+    # for title, data in daraz_data.items():
+    #     price = data["price"]
+    #     link = data["link"]
+    #     image = data["image"]
+
+    #     print(f"Title: {title}")
+    #     print(f"Price: {price}")
+    #     print(f"Link: {link}")
+    #     print(f"Image Link: {image}")
+    #     print("-----")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

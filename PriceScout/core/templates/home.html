@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Scout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: auto; /* Adjust to fit content */
+            background-color: #f9f9f9; 
+        }
+        .product {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .product img {
+            max-width: 100px; /* Adjust image size */
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Price Scout</h1>
+    
+    <form method="post" id="myForm">
+        {% csrf_token %}  
+        <input type="text" name="textbox" placeholder="Enter Product Name" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="output">
+        {% for title, data in daraz_data.items %}
+            <div class="product">
+                <img src="{{ data.image }}" alt="{{ title }}">
+                <div>
+                    <h2>{{ title }}</h2>
+                    <p>Price: {{ data.price }}</p>
+                    <p><a href="{{ data.link }}" target="_blank">View Product</a></p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
