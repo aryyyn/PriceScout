@@ -24,7 +24,7 @@ class DataExtract:
 
         # Start Playwright and launch Chromium in headless mode
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             # Open Daraz website
@@ -47,7 +47,7 @@ class DataExtract:
                 html_content, "html.parser"
             )  # Initialize BeautifulSoup
 
-            
+            # print(html_content)
             # Initialize dictionary to store product data
             DarazProductDict = {}
 
@@ -102,7 +102,7 @@ class DataExtract:
             dict: A dictionary containing product titles, prices, and links.
         """
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             await page.goto("https://thulo.com.np/", wait_until="domcontentloaded",)
@@ -159,7 +159,7 @@ class DataExtract:
             dict: A dictionary containing product titles, prices, and links.
         """
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             await page.goto("https://hamrobazaar.com/", wait_until="domcontentloaded",)
@@ -228,7 +228,7 @@ class DataExtract:
             dict: A dictionary containing product titles, prices, and links.
         """
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             await page.goto("https://www.okdam.com/", wait_until="domcontentloaded",)
@@ -257,7 +257,7 @@ class DataExtract:
                     OkDamProductDict[title] = {
                         "price": price,
                         "link": links,
-                        "image": image_url,
+                        "image": ' '.join(image_url),
                     }
 
             except Exception as err:
@@ -279,7 +279,7 @@ class DataExtract:
             dict: A dictionary containing product titles, prices, and links.
         """
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             await page.goto("https://dealayo.com/", wait_until="domcontentloaded",)
@@ -306,8 +306,8 @@ class DataExtract:
 
                     DealAyoDataDict[title] = {
                         "price": price,
-                        "link": links,
-                        "image": image_url,
+                        "link": ' '.join(links),
+                        "image": ' '.join(image_url),
                     }
 
             except Exception as err:
@@ -320,26 +320,27 @@ class DataExtract:
 # Instantiate the DataExtract class and scrape product data
 async def main():
     DE = DataExtract()
-    productName = "headphone"
+    productName = "water"
 
 #     # Gather the results from the async function
     results = await asyncio.gather(DE.daraz_extract(productName))
 
 #     # The results will be a list with one item (the dictionary returned by daraz_extract)
-    daraz_data = results[0]
+    dealayo_extraction = results[0]
 
     # Now we can iterate over the dictionary items
-    # for title, data in daraz_data.items():
-    #     price = data["price"]
-    #     link = data["link"]
-    #     image = data["image"]
+    for title, data in dealayo_extraction.items():
+        price = data["price"]
+        link = data["link"]
+        image = data["image"]
 
-    #     print(f"Title: {title}")
-    #     print(f"Price: {price}")
-    #     print(f"Link: {link}")
-    #     print(f"Image Link: {image}")
-    #     print("-----")
+        print(f"Title: {title}")
+        print(f"Price: {price}")
+        print(f"Link: {link}")
+        print(f"Image Link: {image}")
+        print("-----")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    pass
+    # asyncio.run(main())

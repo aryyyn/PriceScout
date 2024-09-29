@@ -32,19 +32,17 @@ async def home(request):
             ]
             results = await asyncio.gather(*tasks)
             context =  {
-                'result1': results[0],
-                'result2': results[1],
-                'result3': results[2],
-                'result4': results[3],
-                'result5': results[4]
+                'Thulo': results[0],
+                'OkDam': results[1],
+                'Hamro Bazaar': results[2],
+                'Dealayo': results[3],
+                'Daraz': results[4]
             }
-            return render(request, "home.html", context=context)
+            return render(request, "home.html", context={'context': context})
         except Exception as err:
-            print(err)
-            return render(request, "home.html")
-            
-            
-        
+            print("Error:", err)
+            return render(request, "home.html", context={'error': str(err)})
+    
     return render(request, "home.html")
 
 # class Home():
